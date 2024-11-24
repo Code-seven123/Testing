@@ -1,50 +1,64 @@
-name: Extract All tar.md5 Files
+name: Download and Process Firmware
 
 on:
   workflow_dispatch:
 
 jobs:
-  extract_tar_md5:
+  download_and_extract_vendor:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install tools
+    - name: Install tools and gdown
       run: |
         sudo apt update
         sudo apt install -y unzip
+        pip install gdown
 
     - name: Download firmware from Google Drive
       run: |
-        pip install gdown
         gdown "https://drive.google.com/uc?export=download&id=1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" -O firmware.zip
 
-    - name: Validate firmware.zip
+    - name: Validate ZIP file
       run: |
-        unzip -tq firmware.zip
+        if ! unzip -tq firmware.zip; then
+          echo "Invalid or corrupt ZIP file."
+          exit 1
+        fi
 
-    - name: Extract firmware.zip
+    - name: Extract firmware ZIP
       run: |
         mkdir firmware_extracted
         unzip firmware.zip -d firmware_extracted
 
-    - name: Debug: List files in firmware_extracted
+    - name: Debug: List extracted files
       run: |
         ls -R firmware_extracted
 
-    - name: Extract all tar.md5 files
+    - name: Extract all .tar.md5 files
       run: |
-        mkdir tar_md5_extracted
-        find firmware_extracted -name "*.tar.md5" -exec tar -xf {} -C tar_md5_extracted \;
+        mkdir extracted_tar
+        find firmware_extracted -name "*.tar.md5" -exec tar -xf {} -C extracted_tar \;
 
-    - name: Debug: List extracted files
+    - name: Debug: List extracted .tar.md5 contents
       run: |
-        ls -R tar_md5_extracted
+        ls -R extracted_tar
 
-    - name: Upload all extracted files to artifact
+    - name: Find and save vendor.img
+      run: |
+        find ./extracted_tar -name "vendor*.img*" -exec mv {} ./vendor.img \;
+
+    - name: Debug: Verify vendor.img
+      run: |
+        if [ ! -f vendor.img ]; then
+          echo "vendor.img not found!"
+          exit 1
+        fi
+
+    - name: Upload vendor.img to artifact
       uses: actions/upload-artifact@v3
       with:
-        name: extracted-tar-md5
-        path: tar_md5_extracted
+        name: vendor-img
+        path: ./vendor.img
