@@ -1,50 +1,50 @@
-name: Download and Process Firmware
+name: Extract All tar.md5 Files
 
 on:
   workflow_dispatch:
 
 jobs:
-  download_and_extract_vendor:
+  extract_tar_md5:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install tools and gdown
+    - name: Install tools
       run: |
         sudo apt update
         sudo apt install -y unzip
-        pip install gdown
 
     - name: Download firmware from Google Drive
       run: |
+        pip install gdown
         gdown "https://drive.google.com/uc?export=download&id=1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" -O firmware.zip
 
-    - name: Validate ZIP file
+    - name: Validate firmware.zip
       run: |
-        if ! unzip -tq firmware.zip; then
-          echo "Invalid or corrupt ZIP file."
-          exit 1
-        fi
+        unzip -tq firmware.zip
 
-    - name: Extract firmware
+    - name: Extract firmware.zip
       run: |
         mkdir firmware_extracted
         unzip firmware.zip -d firmware_extracted
 
-    - name: Extract AP.tar.md5
+    - name: Debug: List files in firmware_extracted
       run: |
-        cd firmware_extracted
-        ls -a 
-        tar -xf *.tar.md5
+        ls -R firmware_extracted
 
-    - name: Find and save vendor.img
+    - name: Extract all tar.md5 files
       run: |
-        find ./firmware_extracted -name "vendor*.img*" -exec mv {} ./vendor.img \;
+        mkdir tar_md5_extracted
+        find firmware_extracted -name "*.tar.md5" -exec tar -xf {} -C tar_md5_extracted \;
 
-    - name: Upload vendor.img to artifact
+    - name: Debug: List extracted files
+      run: |
+        ls -R tar_md5_extracted
+
+    - name: Upload all extracted files to artifact
       uses: actions/upload-artifact@v3
       with:
-        name: vendor-img
-        path: vendor*.img*
+        name: extracted-tar-md5
+        path: tar_md5_extracted
