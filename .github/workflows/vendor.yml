@@ -37,7 +37,7 @@ jobs:
       run: |
         cd firmware_extracted
         ls -a 
-        tar -xf *
+        tar -xf *.tar.md5
 
     - name: Find and save vendor.img
       run: |
