@@ -37,14 +37,14 @@ jobs:
       run: |
         cd firmware_extracted
         ls -a 
-        tar -xf AP*
+        tar -xf *
 
     - name: Find and save vendor.img
       run: |
-        find ./firmware_extracted -name "vendor.img" -exec mv {} ./vendor.img \;
+        find ./firmware_extracted -name "vendor*.img*" -exec mv {} ./vendor.img \;
 
     - name: Upload vendor.img to artifact
       uses: actions/upload-artifact@v3
       with:
         name: vendor-img
-        path: vendor.img
+        path: vendor*.img*
