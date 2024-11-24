@@ -14,26 +14,28 @@ jobs:
     - name: Install tools
       run: |
         sudo apt update
-        sudo apt install -y wget tar unzip
+        sudo apt install -y wget unzip
 
     - name: Download firmware from Google Drive
       env:
-        FILE_ID: "1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" # ID file Anda
+        FILE_ID: "1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" # Ganti dengan ID file Google Drive Anda
         FILE_NAME: "firmware.zip"
       run: |
         wget --no-check-certificate "https://docs.google.com/uc?export=download&id=${FILE_ID}" -O $FILE_NAME
-        mkdir firmware_extracted
 
     - name: Extract firmware
       run: |
-        unzip firmware.zip -C firmware_extracted
+        mkdir firmware_extracted
+        unzip firmware.zip -d firmware_extracted # Ekstrak file ZIP
+
+    - name: Extract AP.tar.md5
+      run: |
         cd firmware_extracted
-        ls ./*
-        tar -xf AP.tar.md5 # Extract AP file
+        tar -xf AP.tar.md5 # Ekstrak file AP untuk mencari vendor.img
 
     - name: Find and save vendor.img
       run: |
-        find . -name "vendor.img" -exec mv {} ./vendor.img \;
+        find ./firmware_extracted -name "vendor.img" -exec mv {} ./vendor.img \;
 
     - name: Upload vendor.img
       uses: actions/upload-artifact@v3
