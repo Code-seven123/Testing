@@ -19,15 +19,16 @@ jobs:
     - name: Download firmware from Google Drive
       env:
         FILE_ID: "1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" # ID file Anda
-        FILE_NAME: "firmware.tar.md5"
+        FILE_NAME: "firmware.zip"
       run: |
         wget --no-check-certificate "https://docs.google.com/uc?export=download&id=${FILE_ID}" -O $FILE_NAME
         mkdir firmware_extracted
 
     - name: Extract firmware
       run: |
-        tar -xf firmware.tar.md5 -C firmware_extracted
+        unzip firmware.zip -C firmware_extracted
         cd firmware_extracted
+        ls ./*
         tar -xf AP.tar.md5 # Extract AP file
 
     - name: Find and save vendor.img
