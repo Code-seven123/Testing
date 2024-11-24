@@ -1,0 +1,41 @@
+name: Extract Vendor Image from Google Drive
+
+on:
+  workflow_dispatch: # Menjalankan workflow secara manual
+
+jobs:
+  download_and_extract_vendor:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install tools
+      run: |
+        sudo apt update
+        sudo apt install -y wget tar unzip
+
+    - name: Download firmware from Google Drive
+      env:
+        FILE_ID: "1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" # ID file Anda
+        FILE_NAME: "firmware.tar.md5"
+      run: |
+        wget --no-check-certificate "https://docs.google.com/uc?export=download&id=${FILE_ID}" -O $FILE_NAME
+        mkdir firmware_extracted
+
+    - name: Extract firmware
+      run: |
+        tar -xf firmware.tar.md5 -C firmware_extracted
+        cd firmware_extracted
+        tar -xf AP.tar.md5 # Extract AP file
+
+    - name: Find and save vendor.img
+      run: |
+        find . -name "vendor.img" -exec mv {} ./vendor.img \;
+
+    - name: Upload vendor.img
+      uses: actions/upload-artifact@v3
+      with:
+        name: vendor-img
+        path: vendor.img
