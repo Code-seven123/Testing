@@ -1,7 +1,7 @@
-name: Extract Vendor Image from Google Drive
+name: Download and Process Firmware
 
 on:
-  workflow_dispatch: # Menjalankan workflow secara manual
+  workflow_dispatch:
 
 jobs:
   download_and_extract_vendor:
@@ -11,33 +11,44 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install tools
+    - name: Install tools and gdown
       run: |
         sudo apt update
-        sudo apt install -y wget unzip
+        sudo apt install -y unzip
+        pip install gdown
 
     - name: Download firmware from Google Drive
-      env:
-        FILE_ID: "1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" # Ganti dengan ID file Google Drive Anda
-        FILE_NAME: "firmware.zip"
       run: |
-        wget --no-check-certificate "https://docs.google.com/uc?export=download&id=${FILE_ID}" -O $FILE_NAME
+        gdown "https://drive.google.com/uc?export=download&id=1EbYQ5xMFlfyh8RqjDhhYMTDVAXOVLUCv" -O firmware.zip
+
+    - name: Validate ZIP file
+      run: |
+        if ! unzip -tq firmware.zip; then
+          echo "Invalid or corrupt ZIP file."
+          exit 1
+        fi
 
     - name: Extract firmware
       run: |
         mkdir firmware_extracted
-        unzip firmware.zip -d firmware_extracted # Ekstrak file ZIP
+        unzip firmware.zip -d firmware_extracted
 
     - name: Extract AP.tar.md5
       run: |
         cd firmware_extracted
-        tar -xf AP.tar.md5 # Ekstrak file AP untuk mencari vendor.img
+        tar -xf AP.tar.md5
 
     - name: Find and save vendor.img
       run: |
         find ./firmware_extracted -name "vendor.img" -exec mv {} ./vendor.img \;
 
-    - name: Upload vendor.img
+    - name: Upload firmware.zip to artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware-zip
+        path: firmware.zip
+
+    - name: Upload vendor.img to artifact
       uses: actions/upload-artifact@v3
       with:
         name: vendor-img
