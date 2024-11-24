@@ -36,7 +36,8 @@ jobs:
     - name: Extract AP.tar.md5
       run: |
         cd firmware_extracted
-        tar -xf AP.tar.md5
+        ls -a 
+        tar -xf AP*
 
     - name: Find and save vendor.img
       run: |
