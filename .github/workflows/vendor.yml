@@ -33,32 +33,20 @@ jobs:
         mkdir firmware_extracted
         unzip firmware.zip -d firmware_extracted
 
-    - name: Debug: List extracted files
-      run: |
-        ls -R firmware_extracted
-
     - name: Extract all .tar.md5 files
       run: |
-        mkdir extracted_tar
-        find firmware_extracted -name "*.tar.md5" -exec tar -xf {} -C extracted_tar \;
+        cd  firmware_extracted
+        tar -xf AP*
 
     - name: Debug: List extracted .tar.md5 contents
       run: |
-        ls -R extracted_tar
 
     - name: Find and save vendor.img
       run: |
-        find ./extracted_tar -name "vendor*.img*" -exec mv {} ./vendor.img \;
-
-    - name: Debug: Verify vendor.img
-      run: |
-        if [ ! -f vendor.img ]; then
-          echo "vendor.img not found!"
-          exit 1
-        fi
+        find ./firmware_extracted -name "super.img" -exec mv {} ./super.img \;
 
     - name: Upload vendor.img to artifact
       uses: actions/upload-artifact@v3
       with:
-        name: vendor-img
-        path: ./vendor.img
+        name: super-img
+        path: ./super.img
